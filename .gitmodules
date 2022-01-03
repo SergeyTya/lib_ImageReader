@@ -1,3 +1,9 @@
 [submodule "googletest"]
 	path = googletest
 	url = https://github.com/google/googletest.git
+[submodule "lib_crc"]
+	path = lib_crc
+	url = https://github.com/SergeyTya/lib_crc.git
+[submodule "lib_SerialPort"]
+	path = lib_SerialPort
+	url = https://github.com/SergeyTya/lib_SerialPort.git
