@@ -1,45 +1,14 @@
 cmake_minimum_required(VERSION 3.22)
 project(imagereader_lib)
 
+if(TEST_IMAGEREADER)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}") # puts libriries and bin at the same dir
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
-
-add_library( imagereader SHARED
-hexImage.h
-hexImage.cpp
-record.h
-record.cpp
-comModbusImage.h
-comModbusImage.cpp
-Image.h
-Image.cpp   
-binImage.h
-binImage.cpp 
-)
-
-#USE interface to unclude lib path at project target
-target_include_directories(imagereader
-          INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
-          )
-          
-
-target_include_directories(
-     imagereader PRIVATE
-    "${CMAKE_CURRENT_SOURCE_DIR}"
-)
+endif()
 
 add_subdirectory(lib_crc)
 add_subdirectory(lib_SerialPort)
-
-
-target_link_libraries(
-    imagereader PRIVATE
-    serialport
-    crc_lib
-)
-
-install(TARGETS imagereader DESTINATION .)
 
 option(TEST_IMAGEREADER "build test bin" OFF)
 option(DEBUG "debug configuration" OFF)
@@ -49,7 +18,6 @@ if(DEBUG)
 endif()
 
 if(TEST_IMAGEREADER)
-
 
  # googletest
 add_subdirectory(
@@ -96,5 +64,40 @@ target_compile_options(
         -lserialport
         #-Werror
 )
+
+else()
+
+add_library( imagereader SHARED
+hexImage.h
+hexImage.cpp
+record.h
+record.cpp
+comModbusImage.h
+comModbusImage.cpp
+Image.h
+Image.cpp   
+binImage.h
+binImage.cpp 
+)
+
+#USE interface to unclude lib path at project target
+target_include_directories(imagereader
+          INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
+          )
+          
+
+target_include_directories(
+     imagereader PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+)
+
+
+target_link_libraries(
+    imagereader PRIVATE
+    serialport
+    crc_lib
+)
+
+install(TARGETS imagereader DESTINATION .)
 
 endif()	
