@@ -1,7 +1,5 @@
 /*
- * devImage.cpp
- *
- *  Created on: 25 ����. 2021 �.
+ *  Modified on: 28/06/2022
  *      Author: Sergey
  */
 
@@ -23,11 +21,12 @@ ComModbusImage::~ComModbusImage() {
 
 void ComModbusImage::ConnectInti(string portname, unsigned long baudRate, int adr){
 
+
 	this->modbusAdr = adr;
 	cout<<"Searching device "<<portname<<" "<<baudRate<<" "<<adr<<endl;
 	port->openPort(portname,baudRate);
 
-	if(port->isOpen()){
+  if(port->isOpen()){
 		check_modbus_device();
 		setup_loader();
 		akn();
@@ -55,9 +54,7 @@ bool ComModbusImage::check_modbus_device() {
 				throw std::runtime_error("CRC mismatch");
 
 		cout << "ok" << endl;
-		cout << "Device: " << str.substr(10, 8) << endl;
-		cout << "Info  : " << str.substr(32, 10) << endl;
-		cout << "SW    : " << str.substr(44, 9) << endl;
+		cout << "Device: " << str.substr(10, 8) << str.substr(32, 10) << str.substr(44, 9) << endl;
 
 		_isModbusDevReady = true;
 		return true;
@@ -78,22 +75,27 @@ void ComModbusImage::setup_loader() {
 
 	try {
 
-//		char req2[] = { static_cast<char>(modbusAdr), 0x06, 0x0, 0x0, 0x77,
-//				0x77, 0, 0 };
-//		crc16::usMBCRC16(req2, 6);
-//
-//		port->write(req2, 6 + 2);
+		char req2[] = { static_cast<char>(modbusAdr), 0x06, 0x0, 0x0, 0x77,
+				0x77, 0, 0 };
+                if(_isModbusDevReady){
+                  cout << "Got to loader ... ";
+                  crc16::usMBCRC16(req2, 6);
+
+                  port->write(req2, 6 + 2);
+                  cout << "ok \n ";
+                }
 
 		cout << "Setup loader ... ";
 
-		port->waitForReadyRead(10);
-		port->readAll();
-
-		port->write('I');
-
-		string str = port->readAll(15);
+                string str;
+                for (int i = 0; i < 2; ++i) {
+                  port->write('I');
+                  str = port->readAll(15);
+                }
 
 		cout << str << endl;
+
+                get_devBaseAddr();
 
 		_isBootloaderReady = true;
 
@@ -107,12 +109,10 @@ void ComModbusImage::setup_loader() {
 void ComModbusImage::read(){
 
 	char buf[512];
-
 	Image::read();
 	size_t size = getRequstedSize();
 	try{
 		if(!_isBootloaderReady)throw std::runtime_error("device is not ready");
-
 
 		this->akn();
 
@@ -140,16 +140,12 @@ void ComModbusImage::read(){
 			cout << ".";
 		}
 
-
 		this->prinImageSizeInfo();
 		return;
-
 
 	}catch(std::runtime_error &e){
 		std::cerr << "Error: " << e.what() << '\n';
 	}
-
-
 
 }
 
@@ -286,6 +282,29 @@ bool ComModbusImage::checkCRC(char * resp, int len) const{
 	}
 
 	return res;
+}
+
+
+bool ComModbusImage::get_devBaseAddr() {
+  this->akn();
+  cout<<"Get MCU flash start addr... ";
+  port->waitForReadyRead(3);
+  port->readAll();
+  port->write('B');
+  string str;
+  try{
+    str = port->readAll(10);
+    if(str.length()!=2) throw std::runtime_error("");
+    if(str[0] != 'B') throw std::runtime_error("");
+    this->setImageBaseAdr(0);
+  }catch (std::runtime_error &e) {
+    str = "0x8000000 default";
+    this->setImageBaseAdr(0x8000000);
+  }
+  cout<<str<<"\n";
+
+  return false;
+
 }
 
 } /* namespace std */

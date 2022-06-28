@@ -1,7 +1,5 @@
 /*
- * devImage.h
- *
- *  Created on: 25 ����. 2021 �.
+ *  Modified on: 28/06/2022
  *      Author: Sergey
  */
 
@@ -43,6 +41,7 @@ private:
 	void setup_loader();
 	bool eraseFlash();
 	bool reset_device();
+        bool get_devBaseAddr();
 
 
 
