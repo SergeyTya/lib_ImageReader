@@ -21,7 +21,7 @@ if(TEST_IMAGEREADER)
 
  # googletest
 add_subdirectory(
-    "${CMAKE_CURRENT_SOURCE_DIR}/googletest" 
+    "${CMAKE_CURRENT_SOURCE_DIR}/googletest"
     "googletest"
 )
 
@@ -33,12 +33,12 @@ add_executable(
     binImage.cpp
     hexImage.cpp
     record.cpp
-    comModbusImage.cpp    
+    comModbusImage.cpp
     Image.h
     binImage.h
     hexImage.h
     record.h
-    comModbusImage.h 
+    comModbusImage.h
 )
 
 # Add src to the include directories for the test target
@@ -49,17 +49,17 @@ target_include_directories(
 
 # Link test target against gtest libraries
 target_link_libraries(
-    test_imagereader PRIVATE
-    gtest gtest_main 
-    crc_lib
-    serialport
+        test_imagereader PRIVATE
+        gtest gtest_main
+        lib_crc
+        lib_SerialPort
 )
 
 target_compile_options(
         test_imagereader PRIVATE
-        -Wall 
-        -Wextra 
-        -pedantic 
+        -Wall
+        -Wextra
+        -pedantic
         -std=c++17
         -lserialport
         #-Werror
@@ -94,8 +94,8 @@ target_include_directories(
 
 target_link_libraries(
     imagereader PRIVATE
-    serialport
-    crc_lib
+        lib_SerialPort
+    lib_crc
 )
 
 install(TARGETS imagereader DESTINATION .)
