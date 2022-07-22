@@ -24,6 +24,8 @@ public:
 	string  getSourceName() const{return port->getName();};
 	bool  write (const unsigned char * src, size_t size);
 	void read() override;
+        void reset() override;
+
 
 	std::unique_ptr<ISerialPort> port = ISerialPort::create();
 

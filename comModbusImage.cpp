@@ -306,5 +306,10 @@ bool ComModbusImage::get_devBaseAddr() {
   return false;
 
 }
+void ComModbusImage::reset() {
+  Image::reset();
+  this->akn();
+  reset_device();
+}
 
 } /* namespace std */

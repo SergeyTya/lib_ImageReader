@@ -51,6 +51,7 @@ public:
 	virtual bool       compare(const unsigned char * src, size_t size)  const=0;
 	virtual bool       write  (const unsigned char * src, size_t size)       =0;
 	virtual void       read ()                       =0;
+        virtual void       reset ()                      =0; // for real devices
 
 	virtual ~IImage() = default;
 
@@ -79,7 +80,7 @@ protected:
 	size_t getRequstedSize(){return _requstedSize;};
 	void setImageBaseAdr(unsigned int  adr){imageBaseAdr = adr;};
 	void read(){image.clear(); valid = false;};
-
+        void reset(){};
 
 	std::vector<uint8_t> image;
 	bool valid = false;  // image valid flag
