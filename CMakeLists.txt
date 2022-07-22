@@ -67,7 +67,7 @@ target_compile_options(
 
 else()
 
-add_library( imagereader SHARED
+add_library( imagereader STATIC
 hexImage.h
 hexImage.cpp
 record.h
