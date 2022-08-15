@@ -25,13 +25,16 @@ TEST(hexImage, record_check) {
 
 TEST(comModbusImage, mock_write) {
     // Arrange
-	auto binIm = std::ImageBuilder::read("test.bin");
+	auto binIm = std::ImageBuilder::read("test.hex");
 	std::ComModbusImage mockdev = std::ComModbusImage();
 	mockdev.port = std::move(std::unique_ptr<std::ISerialPort> (new MockSerialPort()));
 
 	// Act (empty for this test)
 	mockdev.ConnectInti("xx", 9600, 1);
 	bool res = mockdev.write(binIm->getImage(), binIm->getImageSize());
+
+        auto resIm = std::ImageBuilder::create("res.hex");
+        resIm->write(mockdev.getImage(), mockdev.getImageSize());
 
     // Assert
 	ASSERT_TRUE(mockdev.isModbusDevReady());

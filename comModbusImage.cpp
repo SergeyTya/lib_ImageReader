@@ -122,7 +122,7 @@ void ComModbusImage::read(){
 
 		if (size % 256 != 0)
 			tmp_cnt += 1; // if reference image size not multiple 256
-
+                int temp_pr = 0;
 		for (int i = 0; i < tmp_cnt; i++) {
 
 
@@ -133,11 +133,15 @@ void ComModbusImage::read(){
 			int page_size = 256;
 			auto it = image.end();
 			if (i == int(size / 256)) page_size =int(256 - (tmp_cnt * 256 - size));
+
 			this->image.insert(it, buf, buf + page_size);
 
-			//int progres = 100 * (i + 1) / int(size / 256);
-			//cout << "Reading Image from device ... " << progres << "%" << endl;
-			cout << ".";
+			int progres = 100 * (i + 1) / int(size / 256);
+                        if( (temp_pr/10)!=(progres/10)){
+                          cout << ". ";
+                          temp_pr=progres;
+                        }
+
 		}
 
 		this->prinImageSizeInfo();
@@ -163,37 +167,37 @@ bool ComModbusImage::write(const unsigned char * src, size_t size) {
 
 		this->akn();
 
-		int tmp_cnt = size / 256;
+		int tmp_cnt = int(size) / 256;
 		if (size % 256 != 0) tmp_cnt += 1; // if reference image size not multiple 256
 
 		cout << "Writing Image to device ";
 
+                int temp_pr = 0;
 		for (int i = 0; i < tmp_cnt; i++) { // writing data
 
 			port->write('P');
 
 			//port->readAll(3);
 
-			if (i != int(size / 256)) { // if reference image size not multiple 256
+			if (i != int(size) / 256) { // if reference image size not multiple 256
 
-				port->write( (char *) src + i * 256, 256);
+				port->write( (char *) (src + i * 256), 256);
 
 			} else {
 
-				int tmp_sz_init = tmp_cnt * 256 - size; // mem size have to be filled
-				int tmp_sz_mem = 256 - tmp_sz_init; // actual mem size from origin
-				memcpy(buf, (char *) src + i * 256, tmp_sz_init);
-				memset(buf + tmp_sz_init, 0xFF, tmp_sz_mem);
+				int tmp_sz_init =int(size) - (tmp_cnt-1) * 256; // mem size have to be copied
+                                memset(buf, 0xFF, 256);
+                                memcpy(buf, (char *) (src + i * 256), tmp_sz_init);
+                                port->write(buf, 256);
+                        }
 
-				port->write(buf, 256);
-			}
-
-			port->readAll(3);
-
-			//int progres = 100 * (i + 1) / static_cast<int>(size / 256);
-			//cout << "Writing Image to device ... " << progres << "%" << endl;
-			cout << ".";
-		}
+                        port->readAll(3);
+                        int progres = 100 * (i + 1) / int(size / 256);
+                        if ((temp_pr / 10) != (progres / 10)) {
+                          cout << ". ";
+                          temp_pr = progres;
+                        }
+                }
 		cout<<"Done"<<endl;
 		setRequstedSize(size);
 		this->read();
