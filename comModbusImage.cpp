@@ -50,7 +50,7 @@ bool ComModbusImage::check_modbus_device() {
 		port->write(req, 5 + 2);
 
 		string str = port->readAll(15);
-		if(str.length()<4 || !checkCRC(str.data(), str.length()))
+		if(str.length()<4 || !checkCRC((char *)str.data(), str.length()))
 				throw std::runtime_error("CRC mismatch");
 
 		cout << "ok" << endl;
@@ -90,7 +90,7 @@ void ComModbusImage::setup_loader() {
                 string str;
                 for (int i = 0; i < 2; ++i) {
                   port->write('I');
-                  str = port->readAll(15);
+                  str = port->readAll(50);
                 }
 
 		cout << str << endl;
@@ -127,7 +127,7 @@ void ComModbusImage::read(){
 
 
 			port->write('V');
-			port->waitForReadyRead(2, 256);
+			port->waitForReadyRead(5, 256);
 			port->read(buf, 256);
 
 			int page_size = 256;
@@ -226,7 +226,7 @@ bool ComModbusImage::reset_device(){
 
 		buf[0]='R';
 		buf[1]='R';
-		if (port->write(buf, 2) == false)
+		if (port->write(buf, 1) == false)
 				return -1;
 
 		while (port->waitForReadyRead(10)) {

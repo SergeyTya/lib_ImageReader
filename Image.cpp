@@ -50,7 +50,7 @@ std::unique_ptr<IImage> ImageBuilder::create(string fname){
 			int modbusadr = 1;
 			int size = 128000;
 
-			char * pch = strtok (fname.data(),",");
+			char * pch = strtok ((char *) fname.data(),",");
 			while (pch != NULL){
 				string a = string(pch);
 				// cout<<a<<endl;
