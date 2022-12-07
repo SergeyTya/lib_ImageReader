@@ -96,7 +96,8 @@ void ComModbusImage::setup_loader() {
       crc16::usMBCRC16(req2, 6);
 
       port->write(req2, 6 + 2);
-      cout << "ok \n ";
+      port->readAll(50);
+      cout << "ok\n";
     }
   } catch (std::runtime_error &e) {
     std::cerr << "Error: " << e.what() << '\n';
