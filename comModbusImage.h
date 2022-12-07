@@ -39,8 +39,9 @@ public:
 
 private:
 
-
+        void check_mcu();
 	void setup_loader();
+        void get_loaderID();
 	bool eraseFlash();
 	bool reset_device();
         bool get_devBaseAddr();
@@ -50,6 +51,7 @@ private:
 	bool checkCRC(char * resp, int len) const;
 
 	int modbusAdr = -1;
+        string mcu_name ="";
 	bool  _isModbusDevReady = false;
 	bool _isBootloaderReady = false;
 };
