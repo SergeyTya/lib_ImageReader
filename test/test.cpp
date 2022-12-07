@@ -36,10 +36,24 @@ TEST(comModbusImage, mock_write) {
         auto resIm = std::ImageBuilder::create("res.hex");
         resIm->write(mockdev.getImage(), mockdev.getImageSize());
 
+       auto resBin = std::ImageBuilder::create("res.bin");
+       resBin->write(mockdev.getImage(), mockdev.getImageSize());
+
     // Assert
 	ASSERT_TRUE(mockdev.isModbusDevReady());
 	ASSERT_TRUE(mockdev.isBootloaderReady());
 	ASSERT_TRUE(res);
+}
+
+TEST(hexImage2, cmp) {
+  // Arrange
+  auto ImIar = std::ImageBuilder::read("iar.hex");
+  auto ImGcc = std::ImageBuilder::read("gcc.hex");
+
+  bool res = ImGcc->compare(ImIar->getImage(), ImIar->getImageSize());
+
+  ASSERT_FALSE(res);
+
 }
 
 
