@@ -56,7 +56,7 @@ bool ComModbusImage::check_modbus_device() {
 
     char req[] = {static_cast<char>(modbusAdr), 0x2b, 0xe, 0x1, 0x1, 0, 0};
 
-    cout << "Searching ModBus device at address " << modbusAdr << " ... ";
+    cout << "Searching ModBus device address " << modbusAdr << " -> ";
 
     crc16::usMBCRC16(req, 5);
 
@@ -72,9 +72,12 @@ bool ComModbusImage::check_modbus_device() {
          << str.substr(44, 9) << endl;
 
     _isModbusDevReady = true;
+    cout.flush();
     return true;
 
   } catch (std::runtime_error &e) {
+    cout<<endl;
+    cout.flush();
     std::cerr << "Error: " << e.what() << '\n';
     return false;
   }
@@ -92,12 +95,13 @@ void ComModbusImage::setup_loader() {
     char req2[] = {
         static_cast<char>(modbusAdr), 0x06, 0x0, 0x0, 0x77, 0x77, 0, 0};
     if (_isModbusDevReady) {
-      cout << "Go to loader ... ";
+      cout << "Go to loader -> ";
       crc16::usMBCRC16(req2, 6);
 
       port->write(req2, 6 + 2);
       port->readAll(50);
       cout << "ok\n";
+      cout.flush();
     }
   } catch (std::runtime_error &e) {
     std::cerr << "Error: " << e.what() << '\n';
@@ -116,7 +120,9 @@ void ComModbusImage::read() {
 
     this->akn();
 
-    cout << "Reading " << this->getRequstedSize() << " byte image from device ";
+    cout << "Reading " << this->getRequstedSize()
+         << " byte image from device \n";
+    cout.flush();
 
     int tmp_cnt = size / 256;
 
@@ -138,7 +144,9 @@ void ComModbusImage::read() {
 
       int progres = 100 * (i + 1) / int(size / 256);
       if ((temp_pr / 10) != (progres / 10)) {
-        cout << ". ";
+        cout << ". "<<endl;
+        cout.flush();
+
         temp_pr = progres;
       }
     }
@@ -159,14 +167,15 @@ bool ComModbusImage::write(const unsigned char *src, size_t size) {
     char buf[512];
 
     Image::write(src, size, port->getName());
-    if (size == 0){
+    if (size == 0) {
       throw std::runtime_error("Can not write empty image");
     }
 
-    if(mcu_name.length() == 9){
+    if (mcu_name.length() == 9) {
       string tmp(reinterpret_cast<const char *>(src), size);
-      if(tmp.find(mcu_name) == std::string::npos){
-        string res = "Image don't contains data for "+ mcu_name + " mcu";
+      bool fnd = tmp.find(mcu_name) == std::string::npos;
+      if (!fnd) {
+        string res = "Image don't contains data for " + mcu_name + " mcu";
         throw std::runtime_error(res);
       }
     }
@@ -181,7 +190,8 @@ bool ComModbusImage::write(const unsigned char *src, size_t size) {
     if (size % 256 != 0)
       tmp_cnt += 1; // if reference image size not multiple 256
 
-    cout << "Writing Image to device ";
+    cout << "Writing Image to device \n";
+    cout.flush();
 
     int temp_pr = 0;
     for (int i = 0; i < tmp_cnt; i++) { // writing data
@@ -198,12 +208,13 @@ bool ComModbusImage::write(const unsigned char *src, size_t size) {
       }
 
       port->readAll();
-      port->waitForReadyRead(100,1);
+      port->waitForReadyRead(100, 1);
       port->readAll();
 
       int progres = 100 * (i + 1) / int(size / 256);
       if ((temp_pr / 10) != (progres / 10)) {
-        cout << ". ";
+        cout << ". \n";
+        cout.flush();
         temp_pr = progres;
       }
     }
@@ -227,23 +238,25 @@ bool ComModbusImage::write(const unsigned char *src, size_t size) {
 
 bool ComModbusImage::reset_device() {
 
+  if(!isBootloaderReady()) return false;
+
   char buf[512];
   string str = "";
 
-  cout << "Restart MCU ... ";
+  cout << "Restart MCU -> ";
 
   buf[0] = 'R';
   buf[1] = 'R';
-  if (port->write(buf, 1) == false)
+  if (!port->write(buf, 1))
     return -1;
 
   while (port->waitForReadyRead(10)) {
     str += port->readAll();
-  };
+  }
 
   cout << "ok" << endl;
-
-  return 0;
+  cout.flush();
+  return false;
 }
 
 void ComModbusImage::akn() {
@@ -261,18 +274,19 @@ void ComModbusImage::akn() {
 bool ComModbusImage::eraseFlash() {
 
   this->akn();
-  cout << "Erase MCU flash ... ";
+  cout << "Erase MCU flash -> ";
   port->waitForReadyRead(3);
   port->readAll();
   port->write('E');
   port->waitForReadyRead(100, 3);
   string str = port->readAll();
   if (str != "EOK") {
-    cout<<str<<"  ";
+    cout << str << "  ";
     throw std::runtime_error(" Flash erase error");
   }
 
   cout << "ok" << endl;
+  cout.flush();
 
   return true;
 }
@@ -294,24 +308,27 @@ bool ComModbusImage::checkCRC(char *resp, int len) const {
 
 bool ComModbusImage::get_devBaseAddr() {
   this->akn();
-  cout << "Get MCU flash start addr... ";
+  cout << "MCU flash start addr ->  ";
   port->waitForReadyRead(3);
   port->readAll();
   port->write('B');
   string str;
+
   try {
     str = port->readAll(10);
-    if (str.length() != 2)
-      throw std::runtime_error("");
-    if (str[0] != 'B')
-      throw std::runtime_error("");
-    this->setImageBaseAdr(0);
+    if (str.length() == 2) {
+      if (str[0] != 'B') {
+        this->setImageBaseAdr(0);
+        str = "0x0";
+      }
+    } else {
+      this->setImageBaseAdr(0x8000000);
+      str = "0x8000000 default";
+    }
   } catch (std::runtime_error &e) {
-    str = "0x8000000 default";
-    this->setImageBaseAdr(0x8000000);
   }
   cout << str << "\n";
-
+  cout.flush();
   return false;
 }
 
@@ -325,19 +342,20 @@ void ComModbusImage::get_loaderID() {
   cout << "Setup loader ";
   int count = 0;
   while (true) {
-    cout << ". ";
+    cout << " -";
     try {
       string str;
       port->write('I');
-      port->waitForReadyRead(50,12);
+      port->waitForReadyRead(50, 12);
       str = port->readAll();
-      cout << str << endl;
+      cout << "> "+str << endl;
       _isBootloaderReady = true;
-
       return;
     } catch (std::runtime_error &e) {
       count++;
       if (count == 3) {
+        cout<<endl;
+        cout.flush();
         std::cerr << "Error: " << e.what() << '\n';
         _isBootloaderReady = false;
         return;
@@ -348,14 +366,15 @@ void ComModbusImage::get_loaderID() {
 
 void ComModbusImage::check_mcu() { // read mcu name (9 bytes)
   try {
-    cout << "Check MCU ... ";
+    cout << "Check MCU -> ";
     port->write('M');
     port->waitForReadyRead(10, 9);
     mcu_name = port->readAll();
     cout << mcu_name << "\n";
   } catch (std::runtime_error &e) {
-    cout <<"n/a \n";
+    cout << "n/a \n";
   }
+  cout.flush();
 }
 
 } /* namespace std */
