@@ -185,6 +185,8 @@ bool ComModbusImage::write(const unsigned char *src, size_t size) {
     this->eraseFlash();
 
     this->akn();
+    port->waitForReadyRead(50); // legacy support
+    port->readAll();
 
     int tmp_cnt = int(size) / 256;
     if (size % 256 != 0)
@@ -207,8 +209,8 @@ bool ComModbusImage::write(const unsigned char *src, size_t size) {
         port->write(buf, 256);
       }
 
-      port->readAll();
-      port->waitForReadyRead(100, 1);
+
+      port->waitForReadyRead(200, 1);
       port->readAll();
 
       int progres = 100 * (i + 1) / int(size / 256);
