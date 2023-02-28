@@ -51,7 +51,7 @@ private:
 	bool checkCRC(char * resp, int len) const;
 
 	int modbusAdr = -1;
-        string mcu_name ="";
+        string mcu_name;
 	bool  _isModbusDevReady = false;
 	bool _isBootloaderReady = false;
 };

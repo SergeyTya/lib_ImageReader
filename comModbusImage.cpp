@@ -171,10 +171,10 @@ bool ComModbusImage::write(const unsigned char *src, size_t size) {
       throw std::runtime_error("Can not write empty image");
     }
 
-    if (mcu_name.length() == 9) {
+    if (!mcu_name.empty()) {
       string tmp(reinterpret_cast<const char *>(src), size);
       bool fnd = tmp.find(mcu_name) == std::string::npos;
-      if (!fnd) {
+      if (fnd) {
         string res = "Image don't contains data for " + mcu_name + " mcu";
         throw std::runtime_error(res);
       }
