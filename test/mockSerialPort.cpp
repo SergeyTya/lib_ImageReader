@@ -1,7 +1,7 @@
 /*
  * mockSerialPort.cpp
  *
- *  Created on: 3 ÿíâ. 2022 ã.
+ *  Created on: 3 ï¿½ï¿½ï¿½. 2022 ï¿½.
  *      Author: Sergey
  */
 
@@ -47,9 +47,16 @@ std::string MockSerialPort::readAll(){
 		image.clear();
 		return "EOK";
 	}
+
 	if(read_sym == 'X'){
 	return std::string(devid, 60);
 	}
+
+        if(read_sym == 'M'){
+        //return "1921VK035";
+        //return "1986BE91T";
+        return "";
+        }
 
 	return "";
 };

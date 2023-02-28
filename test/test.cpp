@@ -25,7 +25,7 @@ TEST(hexImage, record_check) {
 
 TEST(comModbusImage, mock_write) {
     // Arrange
-	auto binIm = std::ImageBuilder::read("test.hex");
+	auto binIm = std::ImageBuilder::read("dev_B0UP2_435234001.hex");
 	std::ComModbusImage mockdev = std::ComModbusImage();
 	mockdev.port = std::move(std::unique_ptr<std::ISerialPort> (new MockSerialPort()));
 
