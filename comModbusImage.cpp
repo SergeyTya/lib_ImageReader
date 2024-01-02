@@ -113,13 +113,15 @@ void ComModbusImage::read() {
 
   char buf[512];
   Image::read();
+  int err_cnt = 0;
   size_t size = getRequstedSize();
   try {
     if (!_isBootloaderReady)
       throw std::runtime_error("device is not ready");
-
+    START:
     this->akn();
-
+    port->waitForReadyRead(50); // legacy support
+    port->readAll();
     cout << "Reading " << this->getRequstedSize()
          << " byte image from device \n";
     cout.flush();
@@ -129,12 +131,24 @@ void ComModbusImage::read() {
     if (size % 256 != 0)
       tmp_cnt += 1; // if reference image size not multiple 256
     int temp_pr = 0;
+
     for (int i = 0; i < tmp_cnt; i++) {
-
       port->write('V');
-      port->waitForReadyRead(100, 256);
-      port->read(buf, 256);
+    
+       try {
+           port->waitForReadyRead(100, 256);
+       } catch (std::runtime_error &e) {
+         std::cerr << "Error: " << e.what() << '\n';
+         err_cnt++;
+         if(err_cnt < 2){
+          port->readAll();
+             goto START;
+          port->waitForReadyRead(3);         }else{
+            return;
+         }
+       }
 
+      port->read(buf, 256);
       int page_size = 256;
       auto it = image.end();
       if (i == int(size / 256))
@@ -174,7 +188,7 @@ bool ComModbusImage::write(const unsigned char *src, size_t size) {
     if (!mcu_name.empty()) {
       string tmp(reinterpret_cast<const char *>(src), size);
       bool fnd = tmp.find(mcu_name) == std::string::npos;
-      if (fnd) {
+      if (!fnd) {
         string res = "Image don't contains data for " + mcu_name + " mcu";
         throw std::runtime_error(res);
       }
